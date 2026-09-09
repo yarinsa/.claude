@@ -6,7 +6,7 @@ Personal [Claude Code](https://claude.com/claude-code) configuration: portable s
 
 | Skill | What it does |
 |---|---|
-| [connect-capsule-github](skills/connect-capsule-github) | Set up, diagnose, or repair GitHub MCP servers for Claude Code and Claude Desktop on macOS. Sources the token from the `gh` CLI keychain, so no PAT is ever written to disk. |
+| [connect-github-mcp](skills/connect-github-mcp) | Set up, diagnose, or repair GitHub MCP servers for Claude Code and Claude Desktop on macOS. Sources the token from the `gh` CLI keychain, so no PAT is ever written to disk. |
 
 ## Install
 
@@ -14,7 +14,7 @@ Skills are directories under `~/.claude/skills/`. Symlink so edits track the rep
 
 ```sh
 git clone https://github.com/yarinsa/.claude.git ~/Code/dotclaude
-ln -s ~/Code/dotclaude/skills/connect-capsule-github ~/.claude/skills/connect-capsule-github
+ln -s ~/Code/dotclaude/skills/connect-github-mcp ~/.claude/skills/connect-github-mcp
 ```
 
 Claude Code picks a skill up on next launch and invokes it when a task matches its `description`.

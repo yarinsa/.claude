@@ -1,9 +1,9 @@
 ---
-name: connect-capsule-github
+name: connect-github-mcp
 description: Set up, diagnose, or repair GitHub MCP servers for Claude Code and Claude Desktop on macOS, using the gh CLI keychain token instead of a plaintext PAT. Covers the github-projects server (Projects V2, preferred) and the legacy remote github server. Use when a GitHub MCP server fails to connect (401, "badly formatted" Authorization header, "not valid MCP server configurations"), when GitHub Projects v2 data is missing or returns null, or when setting up a new machine.
 ---
 
-# Connect Capsule GitHub MCP
+# Connect GitHub MCP
 
 Wires a GitHub MCP server into Claude Code and Claude Desktop with no token stored in plaintext.
 
@@ -55,6 +55,7 @@ Run in order. Each script is idempotent and backs up what it edits.
 
 ```sh
 scripts/diagnose.sh                 # read-only; run first and after every change
+                                    #   optional org arg: scripts/diagnose.sh my-org
 scripts/setup-github-projects.sh    # PREFERRED server; both clients; removes legacy `github`
 scripts/scrub-tokens.sh             # find and redact plaintext tokens on disk
 scripts/install-launchagent.sh      # optional; GUI env var, survives reboot
@@ -64,11 +65,24 @@ scripts/setup-claude-code.sh        # zshrc + remove duplicate/stale MCP entries
 scripts/setup-claude-desktop.sh     # stdio mcp-remote proxy
 ```
 
-`setup-github-projects.sh` smoke-tests the server under `env -i` with a minimal PATH before writing any config, so a GUI-only failure surfaces at setup rather than at first use. It reads `PROJECT_DIR` (default `~/Code/capsule`) for the Claude Code project scope.
+`setup-github-projects.sh` smoke-tests the server under `env -i` with a minimal PATH before writing any config, so a GUI-only failure surfaces at setup rather than at first use. It reads `PROJECT_DIR` (default: the current directory) for the Claude Code project scope.
 
 Then **restart both apps**. Claude Code from a new terminal window.
 
 Verify: `echo ${GITHUB_PERSONAL_ACCESS_TOKEN:0:4}` should print `gho_`.
+
+## Configuration
+
+Scripts take settings from environment variables, or from a `config.env` beside `SKILL.md`.
+Precedence: exported env var, then `config.env`, then the default. `config.env` is gitignored,
+so machine-specific values never reach the repo. Copy `config.env.example` to start.
+
+| Variable | Default | Used by |
+|---|---|---|
+| `GITHUB_ORG` | unset, probes your own user projects | `diagnose.sh` |
+| `PROJECT_DIR` | current directory | `setup-github-projects.sh` |
+| `PIN` | unset, tracks latest on PyPI | `setup-github-projects.sh` |
+| `LAUNCH_LABEL` | `com.claude.ghtoken` | `install-launchagent.sh` |
 
 ## Troubleshooting
 

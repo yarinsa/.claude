@@ -4,8 +4,9 @@
 # Token is read from the gh keychain at spawn, so nothing is stored on disk.
 # Pin a version with:  PIN=4.0.3 ./setup-github-projects.sh
 set -euo pipefail
-PROJECT_DIR="${PROJECT_DIR:-$HOME/Code/capsule}"
+. "$(dirname "$0")/_config.sh"
 PKG="mcp-github-projects${PIN:+==$PIN}"
+echo "Installing for project scope: $PROJECT_DIR"
 command -v gh  >/dev/null || { echo "gh not installed";  exit 1; }
 UVX=$(command -v uvx) || { echo "uvx not installed (brew install uv)"; exit 1; }
 BREW_BIN=$(dirname "$UVX")

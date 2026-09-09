@@ -2,7 +2,8 @@
 # Publishes the gh token to GUI-launched apps, which never source ~/.zshrc.
 # Stores the COMMAND, not the token, so the plist holds no secret.
 set -euo pipefail
-LABEL=com.claude.ghtoken
+. "$(dirname "$0")/_config.sh"
+LABEL="$LAUNCH_LABEL"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 GH=$(command -v gh) || { echo "gh not found"; exit 1; }
 mkdir -p "$HOME/Library/LaunchAgents"

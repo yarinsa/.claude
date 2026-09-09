@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Read-only. Reports the state of every moving part.
 set -uo pipefail
-ORG="${1:-capsulesecurity}"
+. "$(dirname "$0")/_config.sh"
+[ -n "${1:-}" ] && GITHUB_ORG="$1"
 DESKTOP="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
 ok(){ printf '  ok    %s\n' "$1"; }
 bad(){ printf '  FAIL  %s\n' "$1"; }
@@ -17,12 +18,19 @@ C=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOK" https
 [ "$C" = 200 ] && ok "api.github.com 200" || bad "api.github.com $C"
 
 echo "== Projects v2 =="
+if [ -n "$GITHUB_ORG" ]; then
+  Q="{ organization(login:\\\"$GITHUB_ORG\\\"){ projectsV2(first:1){ nodes{ title } } } }"
+  WHO="org $GITHUB_ORG"
+else
+  Q="{ viewer { projectsV2(first:1){ nodes{ title } } } }"
+  WHO="your user (set GITHUB_ORG to probe an org)"
+fi
 R=$(curl -s -H "Authorization: Bearer $TOK" -H 'Content-Type: application/json' \
-  -d "{\"query\":\"{ organization(login:\\\"$ORG\\\"){ projectsV2(first:1){ nodes{ title } } } }\"}" \
-  https://api.github.com/graphql)
+  -d "{\"query\":\"$Q\"}" https://api.github.com/graphql)
 case "$R" in
-  *'"title"'*) ok "Projects v2 readable" ;;
-  *) bad "Projects v2 unreadable (silent null = missing org Projects permission)"; echo "        $R" ;;
+  *'"title"'*) ok "Projects v2 readable ($WHO)" ;;
+  *'"nodes":[]'*) ok "Projects v2 readable ($WHO), none found" ;;
+  *) bad "Projects v2 unreadable for $WHO (silent null = missing Projects permission)"; echo "        $R" ;;
 esac
 
 echo "== github-projects server =="
