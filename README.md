@@ -7,6 +7,7 @@ Personal [Claude Code](https://claude.com/claude-code) configuration: portable s
 | Skill | What it does |
 |---|---|
 | [connect-github-mcp](skills/connect-github-mcp) | Set up, diagnose, or repair GitHub MCP servers for Claude Code and Claude Desktop on macOS. Sources the token from the `gh` CLI keychain, so no PAT is ever written to disk. |
+| [design-patterns-typescript](skills/design-patterns-typescript) | The 22 GoF design patterns in idiomatic TypeScript, split like [refactoring.guru](https://refactoring.guru/design-patterns/typescript) into creational, structural, and behavioral references, with a pattern picker and TS-native shortcuts. |
 
 ## Install
 
