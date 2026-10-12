@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "SubagentStart": [
+      { "hooks": [ { "type": "command", "command": "$HOME/.claude/hooks/subagent-preamble.sh", "timeout": 5 } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "$HOME/.claude/hooks/playbook-reminder.sh", "timeout": 5 } ] }
+    ],
+    "Stop": [
+      { "matcher": "", "hooks": [ { "type": "command", "command": "$HOME/.claude/hooks/idle-notify.sh", "timeout": 5 } ] }
+    ]
+  }
+}

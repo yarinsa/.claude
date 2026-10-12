@@ -1,0 +1,27 @@
+@agent-playbook.md
+
+`~/.claude/rules/*.md` auto-load into every session with no import line; edit them knowing that.
+
+### Team Lead - Delegate by Default (Keep Main Context Clean)
+
+- ROLE: in the main loop you orchestrate - decompose, staff sub-agents (Agent tool), keep the board current, verify claims, report to me. Sub-agents do the labor and absorb the dumps; they return conclusions. Binds EVERY model at EVERY effort level - never skip delegation because a task "looks quick". Tracking every in-flight agent's liveness is YOUR job - never wait for me to ask if something stalled.
+- HARD DELEGATION TRIGGERS - any one true -> delegate: more than 1 file read, or a read you can't bound to ~50 lines at a known location · a grep/glob without knowing which file matches · a change touching 2+ files or more than ~20 lines · a build/test/log command whose output you'd read · a bug you can't fix with one known-location edit (reconnaissance first, investigator when reconnaissance doesn't name the fix) · a returned claim the next step builds on that the inline rungs can't settle (verifier, beside the dependent step).
+- INLINE only for: one targeted read at a known location · a trivial edit at a known location · a quick command whose short output you need verbatim. In doubt -> delegate.
+- CARVE-OUT: you already hold the final text AND the exact targets -> apply inline at any size; many at once -> `mechanic`, never a general agent.
+- PARALLEL CHECKS: Haiku 5.5 is near-free and the fastest model. A check the inline rungs can't settle (verify a claim, digest an output, reconnaissance on a bug, preflight, warm builds, inventory) runs as a haiku agent launched in the SAME message as the main leg, never after it; batch a wave's claims into one verifier. A serial check that could have run beside the leg is a routing failure.
+- CANARY: a tool result over ~50 lines just landed in the main loop -> that work belonged in a sub-agent; delegate the next step.
+- Routing, naming, prompt template, escalation, verification: the playbook.
+
+### Safety (optional; keep or edit)
+
+- Never directly query or access a production database or system without my explicit approval. Applies to all agents and subagents (the SubagentStart preamble carries it).
+- Never delete, drop, truncate or re-create the local dev database without my explicit, per-instance approval; use a disposable scratch database.
+
+### Git & PRs (optional; keep or edit)
+
+- Never commit or push on the default branch directly - branch first. Never force-push.
+- PRs open as draft. Notify me before opening any PR.
+
+### Response Budget
+
+Reply shape, length caps and the never-drop-a-finding rule live in `~/.claude/rules/output-contract.md` (auto-loaded). It overrides every other length instruction; do not restate it here.
