@@ -16,6 +16,7 @@ WRAP="$IEC_DATA_DIR/iec"
 cat > "$WRAP" <<EOF
 #!/bin/sh
 export IEC_DATA_DIR="$IEC_DATA_DIR"
+[ -f "$HERE/../config.env" ] && { set -a; . "$HERE/../config.env"; set +a; }
 exec "$VENV/bin/python" -I "$HERE/iec.py" "\$@"
 EOF
 chmod +x "$WRAP"

@@ -262,7 +262,7 @@ async def _client():
     from iec_api.iec_client import IecClient
     from iec_api.models.jwt import JWT
 
-    user_id, token = secret_get("user-id"), secret_get("token")
+    user_id, token = os.environ.get("IEC_USER_ID") or secret_get("user-id"), secret_get("token")
     if not user_id or not token:
         raise AuthRequired("no stored login")
     client = IecClient(user_id)
@@ -379,7 +379,7 @@ def cmd_fetch(args) -> int:
 async def _login(args) -> int:
     from iec_api.iec_client import IecClient
 
-    user_id = args.id or secret_get("user-id") or input("Israeli ID number (ת.ז.): ").strip()
+    user_id = args.id or os.environ.get("IEC_USER_ID") or secret_get("user-id") or input("Israeli ID number (ת.ז.): ").strip()
     client = IecClient(user_id)
     try:
         factor = await client.login_with_id(prefer_sms=not args.email)
@@ -493,7 +493,7 @@ def _jwt_exp(token_json: str) -> str:
 def cmd_status(args) -> int:
     print(f"data dir : {data_dir()}")
     token = secret_get("token")
-    print(f"login    : {'stored' if secret_get('user-id') else 'no ID stored'}; "
+    print(f"login    : {'stored' if os.environ.get('IEC_USER_ID') or secret_get('user-id') else 'no ID stored'}; "
           f"{'id_token expires ' + _jwt_exp(token) + ' (auto-refreshed)' if token else 'no token'}")
     if not db_path().exists():
         print("db       : not created yet")
