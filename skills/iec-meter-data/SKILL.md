@@ -24,6 +24,7 @@ Local history of 15-minute consumption from an IEC smart meter. Two sources feed
 Data lives outside the repo in `IEC_DATA_DIR`, default `~/Library/Application Support/iec-meter/`:
 `iec.db`, `raw/api/*.json` (every API response), `raw/csv/*.csv` (every imported export), `logs/fetch.log`, `venv/`, and the `iec` wrapper.
 The ID number and Okta token are Keychain items under service `iec-meter` (accounts `user-id`, `token`).
+`IEC_USER_ID` (env or the gitignored `config.env`, which the wrapper loads) overrides the Keychain ID.
 
 ## First-time setup
 
