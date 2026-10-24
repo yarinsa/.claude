@@ -1,0 +1,5 @@
+config.env
+__pycache__/
+# Real exports carry name, address and contract number. Only the synthetic fixture is tracked.
+*.csv
+!tests/fixtures/*.csv

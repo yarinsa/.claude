@@ -1,0 +1,15 @@
+{
+  "_comment": "Plan shapes seen in the Israeli market (2026). Check suppliers' current terms before relying on these numbers. days: 0=Sunday .. 6=Saturday, matched against each interval's own day. start/end are local HH:MM, end exclusive; a window with start > end wraps midnight. discount is % off the energy charge. Copy this file, edit, and pass it with --file.",
+  "plans": [
+    { "name": "flat 6.5% all hours",
+      "windows": [ { "discount": 6.5 } ] },
+    { "name": "flat 7% all hours",
+      "windows": [ { "discount": 7 } ] },
+    { "name": "night 21% Sun-Thu 23:00-07:00",
+      "windows": [ { "days": [0, 1, 2, 3, 4], "start": "23:00", "end": "07:00", "discount": 21 } ] },
+    { "name": "day 15% Sun-Thu 07:00-17:00",
+      "windows": [ { "days": [0, 1, 2, 3, 4], "start": "07:00", "end": "17:00", "discount": 15 } ] },
+    { "name": "night 20% every day 23:00-07:00",
+      "windows": [ { "start": "23:00", "end": "07:00", "discount": 20 } ] }
+  ]
+}
