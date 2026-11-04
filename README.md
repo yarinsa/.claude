@@ -9,6 +9,7 @@ Personal [Claude Code](https://claude.com/claude-code) configuration: portable s
 | [connect-github-mcp](skills/connect-github-mcp) | Set up, diagnose, or repair GitHub MCP servers for Claude Code and Claude Desktop on macOS. Sources the token from the `gh` CLI keychain, so no PAT is ever written to disk. |
 | [design-patterns-typescript](skills/design-patterns-typescript) | The 22 GoF design patterns in idiomatic TypeScript, split like [refactoring.guru](https://refactoring.guru/design-patterns/typescript) into creational, structural, and behavioral references, with a pattern picker and TS-native shortcuts. |
 | [iec-meter-data](skills/iec-meter-data) | Israel Electric Corporation smart-meter data at 15-minute resolution, kept in a local SQLite DB. Daily pull from IEC's customer API (OTP login, token in the Keychain, launchd), CSV export import (also straight from Gmail), gap reporting, and time-of-use plan comparison. |
+| [transcribe](skills/transcribe) | Free, local audio transcription (Hebrew and other languages) with open-source mlx-whisper on Apple Silicon: no API, no upload. Covers setup, the flags that stop Whisper looping on quiet audio, and cross-checking two models on hard recordings. |
 
 ## Install
 
