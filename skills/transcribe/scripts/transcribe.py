@@ -2,7 +2,7 @@
 
 Run with the mlx venv:
     ~/.venvs/mlx-whisper/bin/python transcribe.py <audio> <outdir> [--speakers N]
-        [--models M1,M2,...] [--language he] [--no-diarize]
+        [--models M1,M2,...] [--language he] [--no-diarize] [--dicta]
 
 Writes into <outdir>:
   work/<model>.json   raw mlx-whisper output per model (word timestamps)
@@ -10,6 +10,8 @@ Writes into <outdir>:
   turns.txt           draft from the primary (first) model, one line per speaker turn:
                       [mm:ss.s-mm:ss.s] <speaker>: <text>
   alternates.txt      every model's text per turn window, for the merge step
+  turns_dicta.txt     with --dicta: turns.txt after DictaLM judged each line against the
+                      check model (only replaces words; the merge step starts from it)
 
 turns.txt is the file to correct; render.py turns it into transcript.txt + .srt.
 Timing always comes from the primary model's word timestamps, never from the merge.
@@ -23,6 +25,7 @@ import sys
 import mlx_whisper
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 DEFAULT_MODELS = [
     "mlx-community/ivrit-ai-whisper-large-v3-turbo-mlx",
     "mlx-community/whisper-large-v3-mlx",
@@ -102,6 +105,21 @@ def text_in(words, start, end):
     return "".join(w["word"] for w in words if w["start"] < end and w["end"] > start).strip()
 
 
+def judge_turns(turns, check_words):
+    """DictaLM judges each turn where the check model disagrees; returns {turn index: text} for changed turns."""
+    from mlx_lm import generate, load
+
+    from judge import JUDGE_MODEL, judge_segments
+    print(f"judging with {JUDGE_MODEL}", file=sys.stderr)
+    model, tok = load(JUDGE_MODEL)
+
+    def ask(prompt):
+        p = tok.apply_chat_template([{"role": "user", "content": prompt}], add_generation_prompt=True, tokenize=False)
+        return generate(model, tok, prompt=p, max_tokens=200, verbose=False)
+    judged = judge_segments(turns, check_words, ask)
+    return {i: j["text"] for i, (t, j) in enumerate(zip(turns, judged)) if j["text"] != t["text"]}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("audio")
@@ -110,6 +128,7 @@ def main():
     ap.add_argument("--language", default="he")
     ap.add_argument("--speakers", type=int)
     ap.add_argument("--no-diarize", action="store_true")
+    ap.add_argument("--dicta", action="store_true", help="DictaLM judges lines where the models disagree")
     args = ap.parse_args()
 
     work = os.path.join(args.outdir, "work")
@@ -146,11 +165,20 @@ def main():
             f.write(f"[{fmt(t['start'])}-{fmt(t['end'])}] {who}: {t['text']}\n")
 
     others = {m: words_of(r) for m, r in results.items()}
+    dicta = {}
+    if args.dicta and len(models) > 1:
+        dicta = judge_turns(turns, others[models[1]])
+        with open(os.path.join(args.outdir, "turns_dicta.txt"), "w") as f:
+            for i, t in enumerate(turns):
+                who = names.get(t["speaker"], "דובר")
+                f.write(f"[{fmt(t['start'])}-{fmt(t['end'])}] {who}: {dicta.get(i, t['text'])}\n")
     with open(os.path.join(args.outdir, "alternates.txt"), "w") as f:
-        for t in turns:
+        for i, t in enumerate(turns):
             f.write(f"[{fmt(t['start'])}-{fmt(t['end'])}]\n")
             for m, ws in others.items():
                 f.write(f"  {m.split('/')[-1]}: {text_in(ws, t['start'], t['end'])}\n")
+            if i in dicta:
+                f.write(f"  dicta: {dicta[i]}\n")
 
     print(f"{len(turns)} turns, {len(names)} speakers → {args.outdir}/turns.txt", file=sys.stderr)
 

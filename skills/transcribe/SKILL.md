@@ -17,6 +17,7 @@ inside a repo, and never commit them.
 |---|---|---|
 | 1. Transcribe (primary) | `mlx-community/ivrit-ai-whisper-large-v3-turbo-mlx` | ivrit.ai's Hebrew fine-tune of Whisper. Clearly best on Hebrew. Its word timestamps set all timing. |
 | 2. Transcribe (check) | `mlx-community/whisper-large-v3-mlx` | Different errors from the primary; used only to cross-check words. |
+| 2b. Judge (optional, `--dicta`) | `alexandersdata/DictaLM-3.0-1.7B-Instruct-mlx-8Bit` | Dicta's Hebrew LLM picks between the two drafts per line. Writes `turns_dicta.txt`; the merge starts from it. |
 | 3. Speakers | `ivrit-ai/pyannote-speaker-diarization-3.1` (pyannote 3.1.1) | Hebrew-tuned diarization. Ungated, no HF token. |
 | 4. Merge | you (Claude) | Read the draft and the alternates, fix words and speakers, keep the timestamps. |
 | 5. Render | `scripts/render.py` | Clean `.txt` grouped by speaker plus a matching `.srt`. |
@@ -54,6 +55,8 @@ S=<scratchpad>; mkdir -p $S/in && cp "<recording>" $S/in/clip.m4a
 ~/.venvs/mlx-whisper/bin/python -I scripts/transcribe.py $S/in/clip.m4a $S/out --speakers 2
 ```
 
+`--dicta` adds the Dicta judge (step 2b), about +20 s for a 90 s call.
+
 `--speakers N` when the count is known (a phone call is 2). `--no-diarize` skips
 step 3. Decoding always uses `condition_on_previous_text=False, temperature=0`:
 without them a quiet recording looped on repeated lines.
@@ -62,11 +65,33 @@ It writes `out/turns.txt` (draft, one line per sentence:
 `[mm:ss.s-mm:ss.s] דובר 1: text`), `out/alternates.txt` (every model's text for
 each line's window) and `out/work/*.json` (raw output with word timestamps).
 
+## Dicta judge (`--dicta`)
+
+Needs `mlx-lm` in the mlx venv: `~/.venvs/mlx-whisper/bin/pip install mlx-lm` (~2 GB model on first use).
+`scripts/judge.py` (shared with transcribe.yarinsa.me) sends DictaLM only the lines where the two
+models disagree. What we learned building it:
+
+- **Dicta has no speech model.** Everything Dicta publishes (DictaLM, DictaBERT, BEREL) reads text
+  only, so it can judge drafts but never produce one. Both drafts must come from speech models.
+- **Use the 1.7B, not the 12B.** `DictaLM-3.0-Nemotron-12B-Instruct` (13 GB) took minutes per call;
+  the 1.7B judges a 90 s call's ~20 disputed lines in ~10 s and is enough to pick between two drafts.
+  There is no official MLX build; the `alexandersdata/*-mlx-8Bit` ports work with `mlx-lm`.
+- **Don't trust it to write.** Asked to "write the correct version", even the small model added
+  words nobody said ("את הפרויקט"), dropped words ("לא,") and prefixed lines with "הנוסח הסופי.".
+  `accept()` keeps its output only if every word comes from one of the drafts and no word is dropped;
+  otherwise the line stays the primary's. In practice it then fixes grammar/forms
+  (מפתחה→מפתחת, כזה→כאלה) and punctuation.
+- **Its blind spot:** two readings that are both valid Hebrew (names, numbers, homophones).
+  A text-only judge can't hear which was said and prefers the more fluent one; check those
+  against `alternates.txt` and the audio. A judge that scores candidates against the audio is the
+  planned next step (yarinsa/hebrew-transcribe#3).
+- The `tokenizer_class ... TokenizersBackend` warning on load is harmless.
+
 ## Merge (your job)
 
-Write `out/turns_final.txt` in the same line format:
+Write `out/turns_final.txt` in the same line format, starting from `turns_dicta.txt` when it exists:
 
-- **Words:** start from the primary; where it reads as nonsense and the check
+- **Words:** start from the primary (or Dicta's line, shown as `dicta:` in `alternates.txt`); where it reads as nonsense and the check
   model has a sensible reading for the same window, take that. Where both are
   unclear, write `[לא ברור]`, or `[word?]` for a best guess. Never invent content.
 - **Speakers:** diarization is weak on phone audio, where the far side is quiet
